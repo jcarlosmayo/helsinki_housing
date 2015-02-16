@@ -9,10 +9,10 @@ json <- fromJSON(paste("raw_data/", file_name, ".json", sep=""))
 
 ####################################
 # Extract variables from JSON file #
+####################################
 
 # ID
 housing_data <- data.frame("id" = unlist(json$results$scrap_results$price$href), stringsAsFactors = FALSE)
-# housing_data$id <- iconv(housing_data$id, from="UTF-8", to='ASCII//TRANSLIT')
 
 # Price
 housing_data <- cbind(housing_data, "price" = unlist(json$results$scrap_results$price$text), stringsAsFactors = FALSE)
@@ -46,12 +46,14 @@ rm(i, json)
 
 ####################
 # CLEAN DATA FRAME #
+####################
 
 clean_data <- data.frame(1:nrow(housing_data))
 
 
 ########
 # DATE #
+########
 
 # Date the data was scraped
 clean_data$date <- strptime(housing_data$date, "%a %b %d %Y %H:%M:%S ")
@@ -59,6 +61,7 @@ clean_data$date <- strptime(housing_data$date, "%a %b %d %Y %H:%M:%S ")
 
 ############
 # CLEAN ID #
+############
 
 clean_data$id <- sapply(strsplit(housing_data$id, split = "\\?entry"), "[", 1)
 clean_data$id <- as.numeric(gsub("[^0-9]", "", clean_data$id))
@@ -66,6 +69,7 @@ clean_data$id <- as.numeric(gsub("[^0-9]", "", clean_data$id))
 
 ##############################
 # DELETE DUPLICATE ID VALUES #
+##############################
 
 dup <- duplicated(clean_data[,3])
 clean_data <- clean_data[!dup,]
@@ -76,6 +80,7 @@ rm(dup)
 
 ###############
 # CLEAN PRICE #
+###############
 
 # NEW VARIABLE
 # Rental is paid monthly, weekly or differenlty
@@ -94,8 +99,9 @@ clean_data$price <- as.numeric(clean_data$price)
 clean_data <- clean_data[,-1]
 
 
-################
+##############
 # CLEAN SIZE #
+##############
 
 clean_data$size <- gsub("m.*$", "", housing_data$size)
 clean_data$size <- gsub(",", ".", clean_data$size)
@@ -104,12 +110,14 @@ clean_data$size <- as.numeric(clean_data$size)
 
 ##########################
 # PRICE PER SQUARE METER #
+##########################
 
 clean_data$price_sqm <- clean_data$price / clean_data$size
 
 
 ################
 # CLEAN STREET #
+################
 
 # Split the string by "\n,"
 # Some of the addresses do not include the area so instead of three components will display only two
@@ -137,6 +145,7 @@ rm(fix_street)
 
 #######################
 # ADD GPS COORDINATES #
+#######################
 
 # Before using the 'geocode' function:
 # Fix ä
@@ -159,6 +168,7 @@ clean_data$lon <- geo$lon
 
 ##############
 # POTAL CODE #
+##############
 
 address <- as.character(geo$address)
 address <- gsub("finland", "", address)
@@ -181,6 +191,7 @@ rm(geo)
 
 ###########################
 # CLEAN REAL-STATE AGENCY #
+###########################
 
 clean_data$agent <- housing_data$agent
 
@@ -257,6 +268,7 @@ table(clean_data$agent)
 
 ##################
 # Building types #
+##################
 
 # Translate building types
 
@@ -280,6 +292,7 @@ table(clean_data$type) # Check-up
 
 #####################
 # CLEAN DESCRIPTION #
+#####################
 
 # New variable to collect the number of rooms
 clean_data$rooms <- NA
@@ -373,13 +386,16 @@ rm(x)
 
 ##########################################
 # REMOVE GARAGES AND WEEKLY PAID RENTALS #
+##########################################
 
 clean_data <- subset(clean_data, garage==0 & payment_period == "month")
 
 
 ###########################################
 # DELETE EXTREME (WRONG) GPS OBSERVATIONS #
+###########################################
 
+# Check and remove "outliers"
 ggplot(clean_data, aes(lon, lat)) +
     geom_point()
 
@@ -397,12 +413,14 @@ clean_data <- clean_data[-x,]
 
 ##############
 # DELETE NAS #
+##############
 
 clean_data <- na.omit(clean_data)
 
 
 ###################
 # SAVE FINAL DATA #
+###################
 
 dir_file <- paste("clean_data/", file_name, ".RDS", sep="")
 saveRDS(clean_data, dir_file)

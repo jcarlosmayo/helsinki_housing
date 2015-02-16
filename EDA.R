@@ -1,7 +1,10 @@
+# Load required libraries
 library(ggplot2); library(dplyr); library(RSvgDevice)
 
 #######################
 # Load all clean data #
+#######################
+
 files <- dir("clean_data/")
 
 clean_data <-  data.frame()
@@ -20,6 +23,7 @@ rm(i, rds, files, dup)
 
 ##############
 # HISTOGRAMS #
+##############
 
 # SIZE
 
@@ -54,6 +58,7 @@ ggplot(clean_data, aes(x = price, fill = type)) +
 
 #############################
 # SCATTER PLOT PRICE ~ SIZE #
+#############################
 
 ggplot(clean_data, aes(x = size, y = price, color=city)) +
     geom_point() +
@@ -65,6 +70,7 @@ ggplot(clean_data, aes(x = size, y = price, color=city)) +
 
 #########################
 # Price by type by city #
+#########################
 
 ggplot(clean_data,
        aes(x = city, y = price, color = city)) +
@@ -83,6 +89,7 @@ ggplot(clean_data,
 
 ###############
 # CITY GROUPS #
+###############
 
 city_group <- subset(clean_data, po_code != "", select=c(city, price_sqm, type)) %>%
     group_by(city) %>%
@@ -121,6 +128,7 @@ ggplot(city_group, aes(x = type, y = city)) +
 
 ##########
 # AGENTS #
+##########
 
 # Plot number of rentals per agent
 ggplot(clean_data, aes(x = agent)) +
